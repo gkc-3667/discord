@@ -260,7 +260,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 val token = withContext(Dispatchers.IO) { exchangeCode(code, verifier) }
-                prefs.edit().putString("access_token", token).remove("pkce_verifier").remove("oauth_state").apply()
+                prefs.edit().remove("pkce_verifier").remove("oauth_state").apply()
                 val result = withContext(Dispatchers.IO) { loadDiscordData(token) }
                 user = result.first
                 guilds = result.second
