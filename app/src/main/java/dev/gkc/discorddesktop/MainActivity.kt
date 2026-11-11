@@ -294,9 +294,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun loadDiscordData(token: String): Pair<DiscordUser, List<DiscordGuild>> {
-        val me = apiGet("https://discord.com/api/v10/users/@me", token)
+        val me = JSONObject(apiGet("https://discord.com/api/v10/users/@me", token))
         val user = DiscordUser(me.getString("id"), me.getString("username"), me.optString("global_name").takeIf { it.isNotBlank() && it != "null" })
-        val arr = JSONArray(apiGet("https://discord.com/api/v10/users/@me/guilds", token).toString())
+        val arr = JSONArray(apiGet("https://discord.com/api/v10/users/@me/guilds", token))
         val guilds = (0 until arr.length()).map { i ->
             val g = arr.getJSONObject(i)
             DiscordGuild(g.getString("id"), g.getString("name"), g.optBoolean("owner"))
@@ -304,14 +304,14 @@ class MainActivity : ComponentActivity() {
         return user to guilds
     }
 
-    private fun apiGet(url: String, token: String): JSONObject {
+    private fun apiGet(url: String, token: String): String {
         val conn = URL(url).openConnection() as HttpURLConnection
         conn.requestMethod = "GET"
         conn.setRequestProperty("Authorization", "Bearer $token")
         conn.setRequestProperty("User-Agent", "DiscordDesktopLayout/0.1.0")
         val body = readResponse(conn)
         if (conn.responseCode !in 200..299) error("Discord API HTTP ${conn.responseCode}: $body")
-        return JSONObject(body)
+        return body
     }
 
     private fun readResponse(conn: HttpURLConnection): String {
