@@ -288,8 +288,10 @@ class MainActivity : ComponentActivity() {
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
         conn.outputStream.use { it.write(params.joinToString("&") { (k, v) -> "${enc(k)}=${enc(v)}" }.toByteArray()) }
         val body = readResponse(conn)
+        val httpStatus = conn.responseCode
+        conn.disconnect()
         val json = JSONObject(body)
-        if (conn.responseCode !in 200..299) error(json.optString("error_description", json.optString("error", "OAuth failed")))
+        if (httpStatus !in 200..299) error(json.optString("error_description", json.optString("error", "OAuth failed")))
         return json.getString("access_token")
     }
 
@@ -310,14 +312,15 @@ class MainActivity : ComponentActivity() {
         conn.setRequestProperty("Authorization", "Bearer $token")
         conn.setRequestProperty("User-Agent", "DiscordDesktopLayout/0.1.0")
         val body = readResponse(conn)
-        if (conn.responseCode !in 200..299) error("Discord API HTTP ${conn.responseCode}: $body")
+        val httpStatus = conn.responseCode
+        conn.disconnect()
+        if (httpStatus !in 200..299) error("Discord API HTTP $httpStatus: $body")
         return body
     }
 
     private fun readResponse(conn: HttpURLConnection): String {
         val stream = if (conn.responseCode in 200..299) conn.inputStream else conn.errorStream
         val body = stream?.bufferedReader()?.use { it.readText() } ?: ""
-        conn.disconnect()
         return body
     }
 
